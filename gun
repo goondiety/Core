@@ -1,0 +1,47 @@
+local plr = game:GetService("Players").LocalPlayer
+local items = workspace:WaitForChild("RuntimeItems")
+local tools = {}
+local vals = { AutoPickTools = true } -- Set to false to disable
+
+-- Helper function to check if an item is a tool
+local function hasProperty(object, prop)
+    if not object or not object:FindFirstChild("ObjectInfo") then return false end
+    for _, label in ipairs(object.ObjectInfo:GetChildren()) do
+        if label:IsA("TextLabel") and label.Text == prop then
+            return true
+        end
+    end
+    return false
+end
+
+-- Populate tool list
+local function processItem(v)
+    if not v or not v.Parent then return end
+    local pickupable = { "Consumable", "Gun", "Weapon", "Melee", "Playable", "Tool" }
+
+    for _, prop in ipairs(pickupable) do
+        if hasProperty(v, prop) then
+            table.insert(tools, v)
+            break
+        end
+    end
+end
+
+-- Check all current items
+for _, v in ipairs(items:GetChildren()) do
+    task.spawn(processItem, v)
+end
+
+-- Watch for new items
+items.ChildAdded:Connect(processItem)
+
+-- Pickup loop
+game:GetService("RunService").RenderStepped:Connect(function()
+    if vals.AutoPickTools and plr.Character then
+        for i, v in ipairs(tools) do
+            if v and v.Parent == items and not v:GetAttribute("BuyPrice") and (v:GetPivot().Position - plr.Character:GetPivot().Position).Magnitude <= 30 then
+                game:GetService("ReplicatedStorage"):FindFirstChild("PickUpTool", math.huge):FireServer(v)
+            end
+        end
+    end
+end)
