@@ -1,0 +1,28 @@
+local plr = game:GetService("Players").LocalPlayer
+local rs = game:GetService("ReplicatedStorage")
+local items = workspace:WaitForChild("RuntimeItems")
+
+local function hasProperty(object, prop)
+    if not object or not object:FindFirstChild("ObjectInfo") then return false end
+    for _, label in ipairs(object.ObjectInfo:GetChildren()) do
+        if label:IsA("TextLabel") and label.Text == prop then
+            return true
+        end
+    end
+    return false
+end
+
+-- Main loop
+game:GetService("RunService").RenderStepped:Connect(function()
+    local char = plr.Character
+    if not char then return end
+
+    for _, item in ipairs(items:GetChildren()) do
+        if item and item:IsA("Model") and item.Parent == items then
+            local distance = (item:GetPivot().Position - char:GetPivot().Position).Magnitude
+            if distance <= 30 and hasProperty(item, "Currency") then
+                rs:FindFirstChild("C_ActivateObject", math.huge):FireServer(item)
+            end
+        end
+    end
+end)
