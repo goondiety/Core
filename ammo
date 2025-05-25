@@ -1,0 +1,42 @@
+local plr = game:GetService("Players").LocalPlayer
+local items = workspace:WaitForChild("RuntimeItems")
+local ammoList = {}
+local vals = { AutoPickAmmo = true }
+
+-- Utility to check if an object has a label/property
+local function hasProperty(object, prop)
+    if not object or not object:FindFirstChild("ObjectInfo") then return false end
+    for _, label in ipairs(object.ObjectInfo:GetChildren()) do
+        if label:IsA("TextLabel") and label.Text == prop then
+            return true
+        end
+    end
+    return false
+end
+
+-- Detect ammo and add it to the list
+local function processItem(v)
+    if not v or not v.Parent then return end
+    if hasProperty(v, "Ammo") then
+        table.insert(ammoList, v)
+    end
+end
+
+-- Scan current items
+for _, v in ipairs(items:GetChildren()) do
+    task.spawn(processItem, v)
+end
+
+-- Track newly added items
+items.ChildAdded:Connect(processItem)
+
+-- Auto pickup loop
+game:GetService("RunService").RenderStepped:Connect(function()
+    if vals.AutoPickAmmo and plr.Character then
+        for i, v in ipairs(ammoList) do
+            if v and v.Parent == items and not v:GetAttribute("BuyPrice") and (v:GetPivot().Position - plr.Character:GetPivot().Position).Magnitude <= 30 then
+                game:GetService("ReplicatedStorage"):FindFirstChild("C_ActivateObject", math.huge):FireServer(v)
+            end
+        end
+    end
+end)
