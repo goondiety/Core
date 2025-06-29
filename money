@@ -1,4 +1,4 @@
--- Auto Collect Money Bags (Standalone)
+
 local Mstatus = true -- set to false to stop
 local originalHoldDurations1 = {}
 local runService = game:GetService("RunService")
